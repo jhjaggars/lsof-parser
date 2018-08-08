@@ -29,11 +29,6 @@ struct Parser<I> {
     parser: Offsets,
 }
 
-trait LsofParser {
-    type Output;
-    fn parse_line(&self, line: &str) -> Option<Self::Output>;
-}
-
 impl Offsets {
     fn from_str(s: &str) -> Option<Self> {
         Some(Offsets {
@@ -55,12 +50,8 @@ impl Offsets {
             parser: self.clone()
         }
     }
-}
 
-impl LsofParser for Offsets {
-    type Output = Row;
-
-    fn parse_line(&self, line: &str) -> Option<Self::Output> {
+    fn parse_line(&self, line: &str) -> Option<Row> {
         Some(Row {
             command: line[..self.pid].trim_matches(' ').to_string(),
             pid: line[self.pid..self.pid + 5].trim_matches(' ').to_string(),
