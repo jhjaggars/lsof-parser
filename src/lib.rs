@@ -47,7 +47,7 @@ impl Offsets {
     fn parser<I>(&self, iter: I) -> Parser<I> {
         Parser {
             orig: iter,
-            parser: self.clone()
+            parser: self.clone(),
         }
     }
 
@@ -55,24 +55,39 @@ impl Offsets {
         Some(Row {
             command: line[..self.pid].trim_matches(' ').to_string(),
             pid: line[self.pid..self.pid + 5].trim_matches(' ').to_string(),
-            user: line[self.pid + 5..self.user + 4].trim_matches(' ').to_string(),
-            fd: line[self.user + 4..self.fd + 3].trim_matches(' ').to_string(),
-            type_: line[self.fd + 3..self.type_ + 4].trim_matches(' ').to_string(),
-            device: line[self.type_ + 4..self.device + 6].trim_matches(' ').to_string(),
-            size_off: line[self.device + 6..self.size_off + 8].trim_matches(' ').to_string(),
-            node: line[self.size_off + 8..self.node + 4].trim_matches(' ').to_string(),
+            user: line[self.pid + 5..self.user + 4]
+                .trim_matches(' ')
+                .to_string(),
+            fd: line[self.user + 4..self.fd + 3]
+                .trim_matches(' ')
+                .to_string(),
+            type_: line[self.fd + 3..self.type_ + 4]
+                .trim_matches(' ')
+                .to_string(),
+            device: line[self.type_ + 4..self.device + 6]
+                .trim_matches(' ')
+                .to_string(),
+            size_off: line[self.device + 6..self.size_off + 8]
+                .trim_matches(' ')
+                .to_string(),
+            node: line[self.size_off + 8..self.node + 4]
+                .trim_matches(' ')
+                .to_string(),
             name: line[self.name..].trim_matches(' ').to_string(),
         })
     }
 }
 
-impl<'a, I> Iterator for Parser<I> where I: Iterator<Item=&'a str> {
+impl<'a, I> Iterator for Parser<I>
+where
+    I: Iterator<Item = &'a str>,
+{
     type Item = Row;
 
     fn next(&mut self) -> Option<Row> {
         match self.orig.next() {
             Some(line) => self.parser.parse_line(line),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -83,7 +98,9 @@ mod tests {
 
     #[test]
     fn parses_headers() {
-        let offsets = Offsets::from_str("COMMAND     PID     USER   FD      TYPE             DEVICE   SIZE/OFF    NODE NAME").unwrap();
+        let offsets = Offsets::from_str(
+            "COMMAND     PID     USER   FD      TYPE             DEVICE   SIZE/OFF    NODE NAME",
+        ).unwrap();
         assert_eq!(offsets.command, 0);
         assert_eq!(offsets.pid, 10);
         assert_eq!(offsets.user, 20);
@@ -97,8 +114,12 @@ mod tests {
 
     #[test]
     fn parses_line() {
-        let offsets = Offsets::from_str("COMMAND     PID     USER   FD      TYPE             DEVICE   SIZE/OFF    NODE NAME").unwrap();
-        let lines = "loginwind    89 jjaggars  cwd       DIR                1,4        896       2 /".lines();
+        let offsets = Offsets::from_str(
+            "COMMAND     PID     USER   FD      TYPE             DEVICE   SIZE/OFF    NODE NAME",
+        ).unwrap();
+        let lines =
+            "loginwind    89 jjaggars  cwd       DIR                1,4        896       2 /"
+                .lines();
         let mut parser = offsets.parser(lines);
         let r = parser.next().unwrap();
         assert_eq!(r.command, "loginwind");
@@ -114,7 +135,9 @@ mod tests {
 
     #[test]
     fn parses_with_gaps() {
-        let offsets = Offsets::from_str("COMMAND     PID     USER   FD      TYPE             DEVICE   SIZE/OFF    NODE NAME").unwrap();
+        let offsets = Offsets::from_str(
+            "COMMAND     PID     USER   FD      TYPE             DEVICE   SIZE/OFF    NODE NAME",
+        ).unwrap();
         let lines = "UserEvent   269 jjaggars    6u     unix 0x20369f28a64f7ddd        0t0         ->0x20369f28a64f7d15".lines();
         let mut parser = offsets.parser(lines);
         let r = parser.next().unwrap();
